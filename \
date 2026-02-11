@@ -1,0 +1,56 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+
+	api "github.com/adamascencio/pokedexcli/internal"
+)
+
+type cliCommand struct {
+	name        string
+	description string
+	callback    func(*config) error
+}
+
+type config struct {
+	Previous string
+	Next     string
+}
+
+var commands = map[string]cliCommand{
+	"exit": {
+		name:        "exit",
+		description: "Exit the Pokedex",
+		callback:    commandExit,
+	},
+	"help": {
+		name:        "help",
+		description: "Display help message",
+		callback:    commandHelp,
+	},
+	"map": {
+		name:        "map",
+		description: "Displays the names of 20 areas",
+		callback:    commandMap,
+	},
+}
+
+func main() {
+	scanner := bufio.NewScanner(os.Stdin)
+	urls := config{Next: api.BaseURL}
+	for {
+		fmt.Print("Pokedex > ")
+		for scanner.Scan() {
+			text := cleanInput(scanner.Text())
+			cmd := text[0]
+			if cli, ok := commands[cmd]; ok {
+				cli.callback(&urls)
+			} else {
+				fmt.Println("Unknown command")
+			}
+			fmt.Print("Pokedex > ")
+		}
+	}
+}
