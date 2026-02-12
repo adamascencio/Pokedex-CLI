@@ -1,0 +1,44 @@
+package cli
+
+var Commands = map[string]Command{
+	"exit": {
+		Name:        "exit",
+		Description: "Exit the Pokedex",
+		Callback:    CommandExit,
+	},
+	"help": {
+		Name:        "help",
+		Description: "Display help message",
+		Callback:    CommandHelp,
+	},
+	"map": {
+		Name:        "map",
+		Description: "Displays the names of 20 areas",
+		Callback:    CommandMap,
+	},
+	"mapb": {
+		Name:        "mapb",
+		Description: "Displays the previous 20 names of areas",
+		Callback:    CommandMapBack,
+	},
+	"explore": {
+		Name:        "explore",
+		Description: "List all pokemon in a specified area",
+		Callback:    CommandExplore,
+	},
+	"catch": {
+		Name:        "catch",
+		Description: "Catch a single pokemon",
+		Callback:    CommandCatch,
+	},
+	"inspect": {
+		Name:        "inspect",
+		Description: "Inspect the stats of captured pokemon",
+		Callback:    CommandInspect,
+	},
+	"pokedex": {
+		Name:        "pokedex",
+		Description: "List all captured pokemon",
+		Callback:    CommandPokedex,
+	},
+}
