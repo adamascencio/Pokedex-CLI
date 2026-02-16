@@ -22,6 +22,10 @@ func CommandMap(cfg *AppState, cache *pokecache.Cache, area string) error {
 }
 
 func CommandMapBack(cfg *AppState, cache *pokecache.Cache, area string) error {
+	if cfg.Previous == "" {
+		fmt.Println("Call map first before calling mapb")
+		return nil
+	}
 	res, err := api.GetLocations(cache, cfg.Previous)
 	if err != nil {
 		fmt.Println(err)
