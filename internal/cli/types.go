@@ -1,9 +1,6 @@
 package cli
 
-import (
-	"github.com/adamascencio/pokedexcli/internal/api"
-	"github.com/adamascencio/pokedexcli/internal/pokecache"
-)
+import "github.com/adamascencio/pokedexcli/internal/pokecache"
 
 type Command struct {
 	Name        string
@@ -14,6 +11,5 @@ type Command struct {
 type AppState struct {
 	Previous       string
 	Next           string
-	Captures       map[string]api.Pokemon
 	CommandHistory []string
 }

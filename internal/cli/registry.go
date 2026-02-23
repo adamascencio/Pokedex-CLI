@@ -26,19 +26,9 @@ var Commands = map[string]Command{
 		Description: "List all pokemon in a specified area",
 		Callback:    CommandExplore,
 	},
-	"catch": {
-		Name:        "catch",
-		Description: "Catch a single pokemon",
-		Callback:    CommandCatch,
-	},
 	"inspect": {
 		Name:        "inspect",
-		Description: "Inspect the stats of captured pokemon",
+		Description: "Inspect the stats of any pokemon",
 		Callback:    CommandInspect,
-	},
-	"pokedex": {
-		Name:        "pokedex",
-		Description: "List all captured pokemon",
-		Callback:    CommandPokedex,
 	},
 }

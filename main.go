@@ -39,8 +39,7 @@ func main() {
 	defer l.Close()
 	l.CaptureExitSignal()
 	state := cli.AppState{
-		Next:     api.LocationsURL,
-		Captures: make(map[string]api.Pokemon),
+		Next: api.LocationsURL,
 	}
 	cache := pokecache.NewCache(10 * time.Second)
 	log.SetOutput(l.Stderr())
