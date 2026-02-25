@@ -8,16 +8,21 @@ import (
 	"github.com/adamascencio/pokedexcli/internal/pokecache"
 )
 
+func buildURL(endpoint string, arg string) *url.URL {
+	base, err := url.Parse(endpoint)
+	if err != nil {
+		panic(err)
+	}
+	urlArg, err := url.Parse(arg)
+	if err != nil {
+		panic(err)
+	}
+	fullURL := base.ResolveReference(urlArg)
+	return fullURL
+}
+
 func CommandExplore(cfg *AppState, cache *pokecache.Cache, area string) error {
-	base, err := url.Parse(api.LocationsURL)
-	if err != nil {
-		panic(err)
-	}
-	arg, err := url.Parse(area)
-	if err != nil {
-		panic(err)
-	}
-	fullURL := base.ResolveReference(arg)
+	fullURL := buildURL(api.LocationsURL, area)
 	res, err := api.GetPokemonInLocation(cache, fullURL.String())
 	if err != nil {
 		return err
@@ -34,15 +39,7 @@ func CommandInspect(cfg *AppState, cache *pokecache.Cache, pokemon string) error
 		fmt.Println("Please provide a pokemon name.")
 		return nil
 	}
-	base, err := url.Parse(api.PokemonURL)
-	if err != nil {
-		panic(err)
-	}
-	arg, err := url.Parse(pokemon)
-	if err != nil {
-		panic(err)
-	}
-	fullURL := base.ResolveReference(arg)
+	fullURL := buildURL(api.PokemonURL, pokemon)
 	data, err := api.GetPokemon(cache, fullURL.String())
 	if err != nil {
 		return err
@@ -59,5 +56,37 @@ func CommandInspect(cfg *AppState, cache *pokecache.Cache, pokemon string) error
 		fmt.Printf("   - %s\n", types.Type.Name)
 	}
 	fmt.Println("")
+	return nil
+}
+
+func CommandWeakTo(cfg *AppState, cache *pokecache.Cache, pokemon string) error {
+	if pokemon == "" {
+		fmt.Println("Please provide a pokemon name.")
+		return nil
+	}
+	pokemonURL := buildURL(api.PokemonURL, pokemon)
+	pokemonData, err := api.GetPokemon(cache, pokemonURL.String())
+	if err != nil {
+		return err
+	}
+	typeURLs := make([]string, 0, 2)
+	types := pokemonData.Types
+	for _, t := range types {
+		typeURLs = append(typeURLs, t.Type.URL)
+	}
+	weaknesses := make([]string, 0)
+	for _, link := range typeURLs {
+		typeData, err := api.GetPokemonTypes(cache, link)
+		if err != nil {
+			return err
+		}
+		weak_to_slice := typeData.DamageRelations.DoubleDamageFrom
+		for _, poketype := range weak_to_slice {
+			weaknesses = append(weaknesses, poketype.Name)
+		}
+	}
+	for _, poketype := range weaknesses {
+		fmt.Println(poketype)
+	}
 	return nil
 }
