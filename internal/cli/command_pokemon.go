@@ -8,16 +8,22 @@ import (
 	"github.com/adamascencio/pokedexcli/internal/pokecache"
 )
 
-func buildURL(endpoint string, arg string) *url.URL {
+func buildURL(endpoint string, args ...string) *url.URL {
 	base, err := url.Parse(endpoint)
 	if err != nil {
 		panic(err)
 	}
-	urlArg, err := url.Parse(arg)
-	if err != nil {
-		panic(err)
+	fullURL := base
+	for _, arg := range args {
+		if arg == "" {
+			continue
+		}
+		urlArg, err := url.Parse(arg)
+		if err != nil {
+			panic(err)
+		}
+		fullURL = fullURL.ResolveReference(urlArg)
 	}
-	fullURL := base.ResolveReference(urlArg)
 	return fullURL
 }
 
