@@ -36,4 +36,9 @@ var Commands = map[string]Command{
 		Description: "Find types a pokemon is weak against",
 		Callback:    CommandWeakTo,
 	},
+	"super": {
+		Name:        "super",
+		Description: "Find types a pokemon is super effective against",
+		Callback:    CommandWeakTo,
+	},
 }

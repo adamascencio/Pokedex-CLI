@@ -90,3 +90,35 @@ func CommandWeakTo(cfg *AppState, cache *pokecache.Cache, pokemon string) error 
 	}
 	return nil
 }
+
+func CommandSuperEffective(cfg *AppState, cache *pokecache.Cache, pokemon string) error {
+	if pokemon == "" {
+		fmt.Println("Please provide a pokemon name.")
+		return nil
+	}
+	pokemonURL := buildURL(api.PokemonURL, pokemon)
+	pokemonData, err := api.GetPokemon(cache, pokemonURL.String())
+	if err != nil {
+		return err
+	}
+	typeURLs := make([]string, 0, 2)
+	types := pokemonData.Types
+	for _, t := range types {
+		typeURLs = append(typeURLs, t.Type.URL)
+	}
+	superEffective := make([]string, 0)
+	for _, link := range typeURLs {
+		typeData, err := api.GetPokemonTypes(cache, link)
+		if err != nil {
+			return err
+		}
+		weak_to_slice := typeData.DamageRelations.DoubleDamageTo
+		for _, poketype := range weak_to_slice {
+			superEffective = append(superEffective, poketype.Name)
+		}
+	}
+	for _, poketype := range superEffective {
+		fmt.Println(poketype)
+	}
+	return nil
+}
