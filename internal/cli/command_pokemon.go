@@ -40,7 +40,6 @@ func CommandExplore(cfg *AppState, cache *pokecache.Cache, args ...string) error
 	for _, data := range res.PokemonEncounters {
 		fmt.Println(data.Pokemon.Name)
 	}
-	fmt.Println("")
 	return nil
 }
 
