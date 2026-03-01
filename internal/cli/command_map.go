@@ -6,7 +6,7 @@ import (
 	"github.com/adamascencio/pokedexcli/internal/pokecache"
 )
 
-func CommandMap(cfg *AppState, cache *pokecache.Cache, area string) error {
+func CommandMap(cfg *AppState, cache *pokecache.Cache, args ...string) error {
 	res, err := api.GetLocations(cache, cfg.Next)
 	if err != nil {
 		fmt.Println(err)
@@ -21,7 +21,7 @@ func CommandMap(cfg *AppState, cache *pokecache.Cache, area string) error {
 	return nil
 }
 
-func CommandMapBack(cfg *AppState, cache *pokecache.Cache, area string) error {
+func CommandMapBack(cfg *AppState, cache *pokecache.Cache, args ...string) error {
 	if cfg.Previous == "" {
 		fmt.Println("Call map first before calling mapb")
 		return nil

@@ -527,8 +527,33 @@ type PokemonTypes struct {
 		} `json:"generation-viii"`
 	} `json:"sprites"`
 }
+
+type PokemonLocations []struct {
+	LocationArea struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"location_area"`
+	VersionDetails []struct {
+		EncounterDetails []struct {
+			Chance          int   `json:"chance"`
+			ConditionValues []any `json:"condition_values"`
+			MaxLevel        int   `json:"max_level"`
+			Method          struct {
+				Name string `json:"name"`
+				URL  string `json:"url"`
+			} `json:"method"`
+			MinLevel int `json:"min_level"`
+		} `json:"encounter_details"`
+		MaxChance int `json:"max_chance"`
+		Version   struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"version"`
+	} `json:"version_details"`
+}
+
 type locationTarget interface {
-	Location | Locations | Pokemon | PokemonTypes
+	Location | Locations | Pokemon | PokemonTypes | PokemonLocations
 }
 
 const LocationsURL = "https://pokeapi.co/api/v2/location-area/"
@@ -598,6 +623,19 @@ func GetPokemon(c *pokecache.Cache, url string) (Pokemon, error) {
 
 func GetPokemonTypes(c *pokecache.Cache, url string) (PokemonTypes, error) {
 	var parsedJSON PokemonTypes
+	data, cached := c.Get(url)
+	if cached {
+		err := unmarshalData(data, &parsedJSON)
+		return parsedJSON, err
+	}
+	body, _ := callPokeApi(url)
+	status := unmarshalData(body, &parsedJSON)
+	c.Add(url, body)
+	return parsedJSON, status
+}
+
+func GetPokemonEncounters(c *pokecache.Cache, url string) (PokemonLocations, error) {
+	var parsedJSON PokemonLocations
 	data, cached := c.Get(url)
 	if cached {
 		err := unmarshalData(data, &parsedJSON)

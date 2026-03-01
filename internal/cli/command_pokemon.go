@@ -27,8 +27,12 @@ func buildURL(endpoint string, args ...string) *url.URL {
 	return fullURL
 }
 
-func CommandExplore(cfg *AppState, cache *pokecache.Cache, area string) error {
-	fullURL := buildURL(api.LocationsURL, area)
+func CommandExplore(cfg *AppState, cache *pokecache.Cache, args ...string) error {
+	if len(args) == 0 {
+		fmt.Println("Provide an area")
+		return nil
+	}
+	fullURL := buildURL(api.LocationsURL, args[0])
 	res, err := api.GetPokemonInLocation(cache, fullURL.String())
 	if err != nil {
 		return err
@@ -40,12 +44,12 @@ func CommandExplore(cfg *AppState, cache *pokecache.Cache, area string) error {
 	return nil
 }
 
-func CommandInspect(cfg *AppState, cache *pokecache.Cache, pokemon string) error {
-	if pokemon == "" {
+func CommandInspect(cfg *AppState, cache *pokecache.Cache, args ...string) error {
+	if len(args) == 0 {
 		fmt.Println("Please provide a pokemon name.")
 		return nil
 	}
-	fullURL := buildURL(api.PokemonURL, pokemon)
+	fullURL := buildURL(api.PokemonURL, args[0])
 	data, err := api.GetPokemon(cache, fullURL.String())
 	if err != nil {
 		return err
@@ -65,12 +69,12 @@ func CommandInspect(cfg *AppState, cache *pokecache.Cache, pokemon string) error
 	return nil
 }
 
-func CommandWeakTo(cfg *AppState, cache *pokecache.Cache, pokemon string) error {
-	if pokemon == "" {
+func CommandWeakTo(cfg *AppState, cache *pokecache.Cache, args ...string) error {
+	if len(args) == 0 {
 		fmt.Println("Please provide a pokemon name.")
 		return nil
 	}
-	pokemonURL := buildURL(api.PokemonURL, pokemon)
+	pokemonURL := buildURL(api.PokemonURL, args[0])
 	pokemonData, err := api.GetPokemon(cache, pokemonURL.String())
 	if err != nil {
 		return err
@@ -97,12 +101,12 @@ func CommandWeakTo(cfg *AppState, cache *pokecache.Cache, pokemon string) error 
 	return nil
 }
 
-func CommandSuperEffective(cfg *AppState, cache *pokecache.Cache, pokemon string) error {
-	if pokemon == "" {
+func CommandSuperEffective(cfg *AppState, cache *pokecache.Cache, args ...string) error {
+	if len(args) == 0 {
 		fmt.Println("Please provide a pokemon name.")
 		return nil
 	}
-	pokemonURL := buildURL(api.PokemonURL, pokemon)
+	pokemonURL := buildURL(api.PokemonURL, args[0])
 	pokemonData, err := api.GetPokemon(cache, pokemonURL.String())
 	if err != nil {
 		return err
@@ -125,6 +129,44 @@ func CommandSuperEffective(cfg *AppState, cache *pokecache.Cache, pokemon string
 	}
 	for _, poketype := range superEffective {
 		fmt.Println(poketype)
+	}
+	return nil
+}
+
+func CommandFindPokemon(cfg *AppState, cache *pokecache.Cache, args ...string) error {
+	if len(args) == 0 {
+		fmt.Println("Please provide a pokemon name.")
+		return nil
+	}
+	endpoint := "https://pokeapi.co/api/v2/pokemon/"
+	pokemonURL := buildURL(endpoint, args[0]+"/", "encounters")
+	locationData, err := api.GetPokemonEncounters(cache, pokemonURL.String())
+	if err != nil {
+		return err
+	}
+	locations := make([]string, 0)
+	games := args[1:]
+	gameFilter := make(map[string]struct{}, len(games))
+	for _, game := range games {
+		if game == "" {
+			continue
+		}
+		gameFilter[game] = struct{}{}
+	}
+	for _, d := range locationData {
+		if len(gameFilter) == 0 {
+			locations = append(locations, d.LocationArea.Name)
+			continue
+		}
+		for _, v := range d.VersionDetails {
+			if _, ok := gameFilter[v.Version.Name]; ok {
+				locations = append(locations, d.LocationArea.Name)
+				break
+			}
+		}
+	}
+	for _, location := range locations {
+		fmt.Println(location)
 	}
 	return nil
 }

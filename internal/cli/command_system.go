@@ -19,7 +19,7 @@ func CleanInput(text string) []string {
 	return words
 }
 
-func CommandExit(cfg *AppState, cache *pokecache.Cache, area string) error {
+func CommandExit(cfg *AppState, cache *pokecache.Cache, args ...string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	return ErrExitRequested
 }

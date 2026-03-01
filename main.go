@@ -67,13 +67,8 @@ func main() {
 			continue
 		}
 		cmd := args[0]
-		arg := ""
-		if len(args) > 1 {
-			arg = args[1]
-		}
-
 		if cliFunc, ok := cli.Commands[cmd]; ok {
-			if err := cliFunc.Callback(&state, cache, arg); err != nil {
+			if err := cliFunc.Callback(&state, cache, args[1:]...); err != nil {
 				if errors.Is(err, cli.ErrExitRequested) {
 					cli.DeleteHistoryFile()
 					break

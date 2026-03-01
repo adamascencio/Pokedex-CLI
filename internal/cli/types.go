@@ -5,7 +5,7 @@ import "github.com/adamascencio/pokedexcli/internal/pokecache"
 type Command struct {
 	Name        string
 	Description string
-	Callback    func(*AppState, *pokecache.Cache, string) error
+	Callback    func(*AppState, *pokecache.Cache, ...string) error
 }
 
 type AppState struct {
