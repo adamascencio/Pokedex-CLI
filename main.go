@@ -1,82 +1,40 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"io"
-	"log"
+	"os"
 	"time"
 
 	"github.com/adamascencio/pokedexcli/internal/api"
 	"github.com/adamascencio/pokedexcli/internal/cli"
 	"github.com/adamascencio/pokedexcli/internal/pokecache"
-	"github.com/chzyer/readline"
 )
 
-func filterInput(r rune) (rune, bool) {
-	switch r {
-	// block CtrlZ feature
-	case readline.CharCtrlZ:
-		return r, false
-	}
-	return r, true
-}
+const commandUsage = "Usage: pokedexcli <command> [arguments]"
 
 func main() {
-	historyFile := cli.CreateHistoryFile()
-	defer cli.DeleteHistoryFile()
-	l, err := readline.NewEx(&readline.Config{
-		Prompt:              "\033[31m»\033[0m ",
-		HistoryFile:         historyFile,
-		InterruptPrompt:     "^C",
-		EOFPrompt:           "exit",
-		HistorySearchFold:   true,
-		FuncFilterInputRune: filterInput,
-	})
-	if err != nil {
-		panic(err)
-	}
-	defer l.Close()
-	l.CaptureExitSignal()
-	state := cli.AppState{
-		Next: api.LocationsURL,
-	}
+	state := cli.AppState{Next: api.LocationsURL}
 	cache := pokecache.NewCache(10 * time.Second)
-	log.SetOutput(l.Stderr())
-	for {
-		line, err := l.Readline()
-		if err == readline.ErrInterrupt {
-			if len(line) == 0 {
-				if err := cli.DeleteHistoryFile(); err != nil {
-					fmt.Println(err)
-				}
-				break
-			} else {
-				continue
-			}
-		} else if err == io.EOF {
-			if err := cli.DeleteHistoryFile(); err != nil {
-				fmt.Println(err)
-			}
-			break
-		}
 
-		args := cli.CleanInput(line)
+	if len(os.Args) < 2 {
+		fmt.Println("No command provided")
+		fmt.Println(commandUsage)
+		cli.Commands["help"].Callback(&state, cache)
+		return
+	}
 
-		if len(args) == 0 {
-			continue
-		}
-		cmd := args[0]
-		if cliFunc, ok := cli.Commands[cmd]; ok {
-			if err := cliFunc.Callback(&state, cache, args[1:]...); err != nil {
-				if errors.Is(err, cli.ErrExitRequested) {
-					cli.DeleteHistoryFile()
-					break
-				}
-				fmt.Println(err)
-			}
-		} else {
-			fmt.Println("Unknown command")
-		}
+	cmd := os.Args[1]
+	args := os.Args[2:]
+
+	cmdFunc, ok := cli.Commands[cmd]
+	if !ok {
+		fmt.Printf("Unknown command: %s\n", cmd)
+		fmt.Println(commandUsage)
+		return
+	}
+
+	if err := cmdFunc.Callback(&state, cache, args...); err != nil {
+		fmt.Println(err)
+		return
 	}
 }
