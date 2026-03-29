@@ -1,12 +1,30 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 
 	"github.com/adamascencio/pokedexcli/internal/api"
 	"github.com/adamascencio/pokedexcli/internal/pokecache"
 )
+
+type inspectResponse struct {
+	Name   string        `json:"name"`
+	Height int           `json:"height"`
+	Weight int           `json:"weight"`
+	Stats  []inspectStat `json:"stats"`
+	Types  []inspectType `json:"types"`
+}
+
+type inspectStat struct {
+	Name     string `json:"name"`
+	BaseStat int    `json:"base_stat"`
+}
+
+type inspectType struct {
+	Name string `json:"name"`
+}
 
 func buildURL(endpoint string, args ...string) *url.URL {
 	base, err := url.Parse(endpoint)
@@ -48,10 +66,52 @@ func CommandInspect(cfg *AppState, cache *pokecache.Cache, args ...string) error
 		fmt.Println("Please provide a pokemon name.")
 		return nil
 	}
-	fullURL := buildURL(api.PokemonURL, args[0])
+	pokemonName := ""
+	jsonOutput := false
+	for _, arg := range args {
+		switch arg {
+		case "--json":
+			jsonOutput = true
+		default:
+			if pokemonName == "" {
+				pokemonName = arg
+			}
+		}
+	}
+	if pokemonName == "" {
+		fmt.Println("Please provide a pokemon name.")
+		return nil
+	}
+	fullURL := buildURL(api.PokemonURL, pokemonName)
 	data, err := api.GetPokemon(cache, fullURL.String())
 	if err != nil {
 		return err
+	}
+	if jsonOutput {
+		response := inspectResponse{
+			Name:   data.Name,
+			Height: data.Height,
+			Weight: data.Weight,
+			Stats:  make([]inspectStat, 0, len(data.Stats)),
+			Types:  make([]inspectType, 0, len(data.Types)),
+		}
+		for _, stat := range data.Stats {
+			response.Stats = append(response.Stats, inspectStat{
+				Name:     stat.Stat.Name,
+				BaseStat: stat.BaseStat,
+			})
+		}
+		for _, pokemonType := range data.Types {
+			response.Types = append(response.Types, inspectType{
+				Name: pokemonType.Type.Name,
+			})
+		}
+		encoded, err := json.MarshalIndent(response, "", "  ")
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(encoded))
+		return nil
 	}
 	fmt.Printf("Name: %s\n", data.Name)
 	fmt.Printf("Height: %d\n", data.Height)
