@@ -9,7 +9,5 @@ type Command struct {
 }
 
 type AppState struct {
-	Previous       string
-	Next           string
 	CommandHistory []string
 }

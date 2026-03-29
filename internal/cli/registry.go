@@ -6,11 +6,6 @@ var Commands = map[string]Command{
 		Description: "Display help message",
 		Callback:    CommandHelp,
 	},
-	"map": {
-		Name:        "map",
-		Description: "Displays the names of 20 areas",
-		Callback:    CommandMap,
-	},
 	"explore": {
 		Name:        "explore",
 		Description: "List all pokemon in a specified area",

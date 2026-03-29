@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/adamascencio/pokedexcli/internal/api"
 	"github.com/adamascencio/pokedexcli/internal/cli"
 	"github.com/adamascencio/pokedexcli/internal/pokecache"
 )
@@ -13,8 +12,8 @@ import (
 const commandUsage = "Usage: pokedexcli <command> [arguments]"
 
 func main() {
-	state := cli.AppState{Next: api.LocationsURL}
-	cache := pokecache.NewCache(10 * time.Second)
+	state := cli.AppState{}
+	cache := pokecache.NewCache(30 * 24 * time.Hour)
 
 	if len(os.Args) < 2 {
 		fmt.Println("No command provided")

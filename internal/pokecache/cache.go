@@ -1,64 +1,89 @@
 package pokecache
 
 import (
-	"sync"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"log"
+	"os"
+	"path/filepath"
 	"time"
+
+	"github.com/adamascencio/pokedexcli/internal/utils"
 )
 
 type cacheEntry struct {
-	createdAt time.Time
-	val       []byte
+	CreatedAt time.Time `json:"created_at"`
+	Val       []byte    `json:"val"`
 }
 
 type Cache struct {
-	mu    sync.Mutex
-	items map[string]cacheEntry
+	dir      string
+	interval time.Duration
 }
 
-// Creates an in-memory cache.
+func hashURL(rawURL string) string {
+	sum := sha256.Sum256([]byte(rawURL))
+	return hex.EncodeToString(sum[:])
+}
+
+// Delete removes a file from the cache, if present.
+func (c *Cache) delete(k string) error {
+	urlHash := hashURL(k)
+	filePath := filepath.Join(c.dir, urlHash)
+	err := os.Remove(filePath)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Creates a disk cache.
 func NewCache(interval time.Duration) *Cache {
-	cache := &Cache{items: make(map[string]cacheEntry)}
-	go cache.reapLoop(interval)
-	return cache
+	dir, _ := os.UserCacheDir()
+	dir = filepath.Join(dir, "pokedexcli")
+	os.MkdirAll(dir, 0755)
+	c := &Cache{dir: dir, interval: interval}
+	return c
 }
 
 // Add stores a cache entry with the provided key and value.
 func (c *Cache) Add(k string, v []byte) {
-	c.mu.Lock()
-	c.items[k] = cacheEntry{
-		createdAt: time.Now(),
-		val:       v,
+	entry := cacheEntry{
+		CreatedAt: time.Now(),
+		Val:       v,
 	}
-	c.mu.Unlock()
+	urlHash := hashURL(k)
+	dir := filepath.Join(c.dir, urlHash)
+	data, _ := json.Marshal(entry)
+	err := utils.SaveData(dir, data)
+	if err != nil {
+		log.Printf("cache add failed for %q: %v", k, err)
+		return
+	}
 }
 
 // Get retrieves a cached value for the key, if present.
 func (c *Cache) Get(k string) ([]byte, bool) {
-	c.mu.Lock()
-	data, ok := c.items[k]
-	c.mu.Unlock()
-	if !ok {
+	urlHash := hashURL(k)
+	var cacheData cacheEntry
+	filePath := filepath.Join(c.dir, urlHash)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
 		return nil, false
 	}
-	return data.val, true
-}
-
-// reapLoop periodically removes expired cache entries.
-func (c *Cache) reapLoop(interval time.Duration) {
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		now := time.Now()
-		c.mu.Lock()
-
-		for key, entry := range c.items {
-			timeLapsed := now.Sub(entry.createdAt)
-			if timeLapsed >= interval {
-				delete(c.items, key)
-			}
-		}
-
-		c.mu.Unlock()
+	if err := json.Unmarshal(data, &cacheData); err != nil {
+		log.Printf("cache decode failed for %q: %v", k, err)
+		_ = c.delete(k)
+		return nil, false
 	}
+	timeElapsed := time.Since(cacheData.CreatedAt)
+	if timeElapsed > c.interval {
+		err := c.delete(k)
+		if err != nil {
+			log.Printf("cache delete failed for %q: %v", k, err)
+		}
+		return nil, false
+	}
+	return cacheData.Val, true
 }
