@@ -589,9 +589,11 @@ func GetLocations(c *pokecache.Cache, url string) (Locations, error) {
 		err := unmarshalData(data, &parsedJSON)
 		return parsedJSON, err
 	}
-	body, _ := callPokeApi(url)
+	body, statusCode := callPokeApi(url)
 	status := unmarshalData(body, &parsedJSON)
-	c.Add(url, body)
+	if statusCode >= 200 && statusCode < 300 {
+		c.Add(url, body)
+	}
 	return parsedJSON, status
 }
 
@@ -602,9 +604,11 @@ func GetPokemonInLocation(c *pokecache.Cache, url string) (Location, error) {
 		err := unmarshalData(data, &parsedJSON)
 		return parsedJSON, err
 	}
-	body, _ := callPokeApi(url)
+	body, statusCode := callPokeApi(url)
 	status := unmarshalData(body, &parsedJSON)
-	c.Add(url, body)
+	if statusCode >= 200 && statusCode < 300 {
+		c.Add(url, body)
+	}
 	return parsedJSON, status
 }
 
@@ -615,9 +619,11 @@ func GetPokemon(c *pokecache.Cache, url string) (Pokemon, error) {
 		err := unmarshalData(data, &parsedJSON)
 		return parsedJSON, err
 	}
-	body, _ := callPokeApi(url)
+	body, statusCode := callPokeApi(url)
 	status := unmarshalData(body, &parsedJSON)
-	c.Add(url, body)
+	if statusCode >= 200 && statusCode < 300 {
+		c.Add(url, body)
+	}
 	return parsedJSON, status
 }
 
@@ -628,9 +634,11 @@ func GetPokemonTypes(c *pokecache.Cache, url string) (PokemonTypes, error) {
 		err := unmarshalData(data, &parsedJSON)
 		return parsedJSON, err
 	}
-	body, _ := callPokeApi(url)
+	body, statusCode := callPokeApi(url)
 	status := unmarshalData(body, &parsedJSON)
-	c.Add(url, body)
+	if statusCode >= 200 && statusCode < 300 {
+		c.Add(url, body)
+	}
 	return parsedJSON, status
 }
 
@@ -641,8 +649,10 @@ func GetPokemonEncounters(c *pokecache.Cache, url string) (PokemonLocations, err
 		err := unmarshalData(data, &parsedJSON)
 		return parsedJSON, err
 	}
-	body, _ := callPokeApi(url)
+	body, statusCode := callPokeApi(url)
 	status := unmarshalData(body, &parsedJSON)
-	c.Add(url, body)
+	if statusCode >= 200 && statusCode < 300 {
+		c.Add(url, body)
+	}
 	return parsedJSON, status
 }
